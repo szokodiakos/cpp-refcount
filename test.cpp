@@ -40,6 +40,12 @@ int main(int argc, char** argv) {
     cout << "+=op concat" << endl;
     hello5 += hello;
 
+    cout << "+op concat with char" << endl;
+    hello5 = hello + 'x';
+
+    cout << "+=op concat with char" << endl;
+    hello5 += 'q';
+
     cout << "return" << endl;
     return 0;
 }

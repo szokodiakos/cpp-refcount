@@ -5,7 +5,6 @@
 
 class StringValue {
 private:
-    int size;
     char *data;
     int refCount;
 public:
@@ -15,7 +14,6 @@ public:
     StringValue operator+ (const StringValue&);
     char& operator[] (int);
     int getRefCount() const;
-    int getSize() const;
     char* getData() const;
     void incrementRefCount();
 };
@@ -32,8 +30,12 @@ public:
     ~MyString();
     MyString& operator= (const MyString&);
     MyString& operator= (MyString &&);
-    MyString& operator+= (MyString&);
+    MyString& operator+= (const MyString&);
     MyString operator+ (const MyString&);
+    MyString& operator+= (const char*);
+    MyString operator+ (const char*);
+    MyString& operator+= (char);
+    MyString operator+ (char);
     char& operator[] (int);
     const char& operator[] (int) const;
     StringValue* getValue();

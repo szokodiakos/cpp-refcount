@@ -5,14 +5,14 @@
 
 // stringvalue defs
 StringValue::StringValue() : refCount {1} {
-    size = 1;
+    int size = 1;
     data = new char[size];
     data[size-1] = '\0';
     std::cout << "  * stringvalue noarg ctor (" << data << ")" << std::endl;
 }
 
 StringValue::StringValue(const char* d) : refCount {1} {
-    size = strlen(d) + 1;
+    int size = strlen(d) + 1;
     data = new char[size];
     for (int i = 0; i < size; i++) {
         data[i] = d[i];
@@ -35,21 +35,25 @@ StringValue::~StringValue() {
 
 StringValue StringValue::operator+ (const StringValue& other) {
     std::cout << "  * stringvalue + operator (" << data << " + " << other.data << ")" << std::endl;
-    char* concated = new char[size + other.getSize() - 1]; // drop first string's trailing '\0'
-    for (int i = 0; i < size; i++) {
+    int length = strlen(data);
+    int otherLength = strlen(other.getData());
+    char* concated = new char[length + otherLength + 1]; // drop first string's trailing '\0'
+    for (int i = 0; i < length; i++) {
         concated[i] = data[i];
     }
 
     // start from size - 1 to omit trailing '\0'
-    for (int i = 0; i < other.getSize(); i++) {
-        concated[size - 1 + i] = other.data[i];
+    for (int i = 0; i < otherLength; i++) {
+        concated[length + i] = other.data[i];
     }
-    return StringValue(concated);
+    StringValue ret(concated);
+    delete[] concated;
+    return ret;
 }
 
 char& StringValue::operator[] (int index) {
     std::cout << "  * stringvalue [] operator" << std::endl;
-    if (index < 0 || index >= size) {
+    if (index < 0 || index >= static_cast<int>(strlen(data))) {
         throw std::out_of_range("index out of range");
     }
     return data[index];
@@ -57,10 +61,6 @@ char& StringValue::operator[] (int index) {
 
 int StringValue::getRefCount() const {
     return refCount;
-}
-
-int StringValue::getSize() const {
-    return size;
 }
 
 char* StringValue::getData() const {
@@ -129,7 +129,7 @@ MyString& MyString::operator= (MyString && rhs) {
     return *this;
 }
 
-MyString& MyString::operator+= (MyString& other) {
+MyString& MyString::operator+= (const MyString& other) {
     std::cout << " * mystring += operator (" << *this << " += " << other << ")" << std::endl;
     *this = *this + other;
     return *this;
@@ -140,9 +140,42 @@ MyString MyString::operator+ (const MyString& other) {
     return MyString(*(value) + *(other.value));
 }
 
+MyString& MyString::operator+= (const char* c) {
+    std::cout << " * mystring += operator with const char* (" << *this << " + " << c << ")" << std::endl;
+    *this = *this + c;
+    return *this;
+}
+
+MyString MyString::operator+ (const char* c) {
+    std::cout << " * mystring + operator with const char* (" << *this << " + " << c << ")" << std::endl;
+    const char* concated = new char[strlen(value->getData()) + strlen(c) + 1];
+    MyString ret(concated);
+    delete[] concated;
+    return ret;
+}
+
+MyString& MyString::operator+= (char c) {
+    std::cout << " * mystring += operator with char (" << *this << " + " << c << ")" << std::endl;
+    *this = *this + c;
+    return *this;
+}
+
+MyString MyString::operator+ (char c) {
+    std::cout << " * mystring + operator with char (" << *this << " + " << c << ")" << std::endl;
+    int length = getLength();
+    char* concated = new char[length + 1 + 1]; // current + 1 char + \0
+    for (int i = 0; i < length; i++) {
+        concated[i] = (*value)[i];
+    }
+    concated[length] = c;
+    concated[length + 1] = '\0';
+    MyString ret(concated);
+    return ret;
+}
+
 const char& MyString::operator[] (int index) const {
     std::cout << " * mystring const [] operator" << std::endl;
-    if (index < 0 || index >= value->getSize()) {
+    if (index < 0 || index >= static_cast<int>(strlen(value->getData()))) {
         throw std::out_of_range("index out of range");
     }
     return (*value)[index];
@@ -150,7 +183,7 @@ const char& MyString::operator[] (int index) const {
 
 char& MyString::operator[] (int index) {
     std::cout << " * mystring [] operator" << std::endl;
-    if (index < 0 || index >= value->getSize()) {
+    if (index < 0 || index >= static_cast<int>(strlen(value->getData()))) {
         throw std::out_of_range("index out of range");
     }
 
@@ -167,7 +200,7 @@ StringValue* MyString::getValue() {
 }
 
 int MyString::getLength() {
-    return value->getSize();
+    return strlen(value->getData());
 }
 
 std::ostream& operator << (std::ostream& os, const MyString& myString) {

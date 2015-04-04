@@ -170,6 +170,7 @@ MyString MyString::operator+ (char c) {
     concated[length] = c;
     concated[length + 1] = '\0';
     MyString ret(concated);
+    delete[] concated;
     return ret;
 }
 

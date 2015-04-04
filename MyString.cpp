@@ -20,15 +20,6 @@ StringValue::StringValue(const char* d) : refCount {1} {
     std::cout << "  * stringvalue const char ctor (" << data << ")" << std::endl;
 }
 
-StringValue::StringValue(StringValue& other) {
-
-    // fake copy ctor
-    refCount = -1;
-    ++other.refCount;
-    std::cout << "  *  stringvalue copy ctor - increase refCount to "
-              << other.refCount << " (" << other.data << ")" << std::endl;
-}
-
 StringValue::~StringValue() {
     if (refCount != -1) {
         --refCount;
@@ -51,6 +42,7 @@ char* StringValue::getData() {
 
 void StringValue::incrementRefCount() {
     ++refCount;
+    std::cout << "  * stringvalue refCount increased to " << refCount << " (" << data << ")" << std::endl;
 }
 
 // mystring defs
@@ -66,7 +58,8 @@ MyString::MyString(const char* d) {
 
 MyString::MyString(const MyString& other) {
     std::cout << " * mystring copy ctor (" << other.value->getData() << ")" << std::endl;
-    value = new StringValue(*other.value);
+    value = other.value;
+    value->incrementRefCount();
 }
 
 MyString::~MyString() {

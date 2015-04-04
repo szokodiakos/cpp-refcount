@@ -11,7 +11,6 @@ private:
 public:
     StringValue();
     StringValue(const char*);
-    StringValue(StringValue&);
     ~StringValue();
     int getRefCount();
     char* getData();

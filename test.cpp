@@ -18,11 +18,11 @@ int main(int argc, char** argv) {
     cout << "=op" << endl;
     hello3 = hello2;
 
-    cout << "move ctor" << endl;
-    MyString hello4("moveCtorHello");
-
     cout << "move =op" << endl;
     hello3 = "moveOpHello";
+
+    cout << "move ctor" << endl;
+    MyString hello4 = std::move(hello3);
 
     cout << "return" << endl;
     return 0;

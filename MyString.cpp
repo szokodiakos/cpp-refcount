@@ -2,19 +2,12 @@
 #include <iostream>
 #include <cstring>
 
-MyString::MyString(const char* d) {
-    value = new StringValue(d);
-}
-
-MyString::~MyString() {
-    std::cout << "mystring dtor" << std::endl;
-    value->~StringValue();
-}
-
+// stringvalue defs
 StringValue::StringValue() : refCount {1} {
     size = 1;
     data = new char[size];
     data[size-1] = '\0';
+    std::cout << "  * stringvalue noarg ctor (" << data << ")" << std::endl;
 }
 
 StringValue::StringValue(const char* d) : refCount {1} {
@@ -24,12 +17,77 @@ StringValue::StringValue(const char* d) : refCount {1} {
         data[i] = d[i];
     }
     data[size-1] = '\0';
+    std::cout << "  * stringvalue const char ctor (" << data << ")" << std::endl;
+}
+
+StringValue::StringValue(StringValue& other) {
+
+    // fake copy ctor
+    refCount = -1;
+    ++other.refCount;
+    std::cout << "  *  stringvalue copy ctor - increase refCount to "
+              << other.refCount << " (" << other.data << ")" << std::endl;
 }
 
 StringValue::~StringValue() {
-    std::cout << "stringvalue dtor" << std::endl;
-    --refCount;
-    if (refCount == 0) {
-        delete[] data;
+    if (refCount != -1) {
+        --refCount;
+        if (refCount == 0) {
+            std::cout << "  * stringvalue dtor (" << data << ")" << std::endl;
+            delete[] data;
+        } else {
+            std::cout << "  * stringvalue refCount decreased to " << refCount << " (" << data << ")" << std::endl;
+        }
     }
+}
+
+int StringValue::getRefCount() {
+    return refCount;
+}
+
+char* StringValue::getData() {
+    return data;
+}
+
+void StringValue::incrementRefCount() {
+    ++refCount;
+}
+
+// mystring defs
+MyString::MyString() {
+    value = new StringValue();
+    std::cout << " * mystring noarg ctor" << std::endl;
+}
+
+MyString::MyString(const char* d) {
+    std::cout << " * mystring const char ctor (" << d << ")" << std::endl;
+    value = new StringValue(d);
+}
+
+MyString::MyString(const MyString& other) {
+    std::cout << " * mystring copy ctor (" << other.value->getData() << ")" << std::endl;
+    value = new StringValue(*other.value);
+}
+
+MyString::~MyString() {
+    std::cout << " * mystring dtor (" << value->getData() << ")" << std::endl;
+    value->~StringValue();
+}
+
+MyString& MyString::operator= (const MyString& rhs) {
+    std::cout << " * mystring op=" << std::endl;
+    if (this != &rhs) {
+        value = rhs.value;
+        value->incrementRefCount();
+    }
+    return *this;
+}
+
+StringValue* MyString::getValue() {
+    return value;
+}
+
+std::ostream& operator << (std::ostream& os, const MyString& myString) {
+    os << myString.value->getData();
+    return os;
 }

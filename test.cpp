@@ -1,7 +1,10 @@
-#include <stdio.h>
+#include <iostream>
 #include "MyString.h"
 
+using namespace std;
+
 int main(int argc, char** argv) {
-    MyString s;
+    MyString hello = "hello";
+    cout << "hi" << endl;
     return 0;
 }

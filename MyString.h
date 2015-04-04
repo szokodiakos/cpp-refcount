@@ -12,7 +12,9 @@ public:
     StringValue();
     StringValue(const char*);
     ~StringValue();
+    char& operator[] (int);
     int getRefCount();
+    int getSize();
     char* getData();
     void incrementRefCount();
 };
@@ -28,6 +30,8 @@ public:
     ~MyString();
     MyString& operator= (const MyString&);
     MyString& operator= (MyString &&);
+    char& operator[] (int);
+    const char& operator[] (int) const;
     StringValue* getValue();
     friend std::ostream& operator << (std::ostream&, const MyString&);
 };

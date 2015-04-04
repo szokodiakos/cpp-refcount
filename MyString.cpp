@@ -1,6 +1,7 @@
 #include "MyString.h"
 #include <iostream>
 #include <cstring>
+#include <stdexcept>
 
 // stringvalue defs
 StringValue::StringValue() : refCount {1} {
@@ -32,8 +33,20 @@ StringValue::~StringValue() {
     }
 }
 
+char& StringValue::operator [](int index) {
+    std::cout << "  * stringvalue [] operator" << std::endl;
+    if (index < 0 || index >= size) {
+        throw std::out_of_range("index out of range");
+    }
+    return data[index];
+}
+
 int StringValue::getRefCount() {
     return refCount;
+}
+
+int StringValue::getSize() {
+    return size;
 }
 
 char* StringValue::getData() {
@@ -96,6 +109,28 @@ MyString& MyString::operator= (MyString && rhs) {
         rhs.value = nullptr;
     }
     return *this;
+}
+
+const char& MyString::operator[] (int index) const {
+    std::cout << " * mystring const [] operator" << std::endl;
+    if (index < 0 || index >= value->getSize()) {
+        throw std::out_of_range("index out of range");
+    }
+    return (*value)[index];
+}
+
+char& MyString::operator[] (int index) {
+    std::cout << " * mystring [] operator" << std::endl;
+    if (index < 0 || index >= value->getSize()) {
+        throw std::out_of_range("index out of range");
+    }
+
+    // there will be other MyStrings who refer to this StringValue - no leak
+    if (value->getRefCount() > 1) {
+        value->~StringValue();
+        value = new StringValue(value->getData());
+    }
+    return (*value)[index];
 }
 
 StringValue* MyString::getValue() {

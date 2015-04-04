@@ -33,7 +33,21 @@ StringValue::~StringValue() {
     }
 }
 
-char& StringValue::operator [](int index) {
+StringValue StringValue::operator+ (const StringValue& other) {
+    std::cout << "  * stringvalue + operator (" << data << " + " << other.data << ")" << std::endl;
+    char* concated = new char[size + other.getSize() - 1]; // drop first string's trailing '\0'
+    for (int i = 0; i < size; i++) {
+        concated[i] = data[i];
+    }
+
+    // start from size - 1 to omit trailing '\0'
+    for (int i = 0; i < other.getSize(); i++) {
+        concated[size - 1 + i] = other.data[i];
+    }
+    return StringValue(concated);
+}
+
+char& StringValue::operator[] (int index) {
     std::cout << "  * stringvalue [] operator" << std::endl;
     if (index < 0 || index >= size) {
         throw std::out_of_range("index out of range");
@@ -41,15 +55,15 @@ char& StringValue::operator [](int index) {
     return data[index];
 }
 
-int StringValue::getRefCount() {
+int StringValue::getRefCount() const {
     return refCount;
 }
 
-int StringValue::getSize() {
+int StringValue::getSize() const {
     return size;
 }
 
-char* StringValue::getData() {
+char* StringValue::getData() const {
     return data;
 }
 
@@ -67,6 +81,10 @@ MyString::MyString() {
 MyString::MyString(const char* d) {
     std::cout << " * mystring const char ctor (" << d << ")" << std::endl;
     value = new StringValue(d);
+}
+
+MyString::MyString(StringValue sv) {
+    value = new StringValue(sv);
 }
 
 MyString::MyString(const MyString& other) {
@@ -111,6 +129,17 @@ MyString& MyString::operator= (MyString && rhs) {
     return *this;
 }
 
+MyString& MyString::operator+= (MyString& other) {
+    std::cout << " * mystring += operator (" << *this << " += " << other << ")" << std::endl;
+    *this = *this + other;
+    return *this;
+}
+
+MyString MyString::operator+ (const MyString& other) {
+    std::cout << " * mystring + operator (" << *this << " + " << other << ")" << std::endl;
+    return MyString(*(value) + *(other.value));
+}
+
 const char& MyString::operator[] (int index) const {
     std::cout << " * mystring const [] operator" << std::endl;
     if (index < 0 || index >= value->getSize()) {
@@ -135,6 +164,10 @@ char& MyString::operator[] (int index) {
 
 StringValue* MyString::getValue() {
     return value;
+}
+
+int MyString::getLength() {
+    return value->getSize();
 }
 
 std::ostream& operator << (std::ostream& os, const MyString& myString) {

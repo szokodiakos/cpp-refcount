@@ -34,6 +34,12 @@ int main(int argc, char** argv) {
     cout << "indexing operator modify on one refCount stringvalue" << endl;
     hello[4] = 'u';
 
+    cout << "+op concat" << endl;
+    MyString hello5 = hello + hello2;
+
+    cout << "+=op concat" << endl;
+    hello5 += hello;
+
     cout << "return" << endl;
     return 0;
 }

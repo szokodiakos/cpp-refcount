@@ -24,8 +24,10 @@ public:
     MyString();
     MyString(const char*);
     MyString(const MyString&);
+    MyString(MyString &&);
     ~MyString();
     MyString& operator= (const MyString&);
+    MyString& operator= (MyString &&);
     StringValue* getValue();
     friend std::ostream& operator << (std::ostream&, const MyString&);
 };

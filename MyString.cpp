@@ -27,7 +27,7 @@ StringValue::~StringValue() {
             std::cout << "  * stringvalue dtor (" << data << ")" << std::endl;
             delete[] data;
         } else {
-            std::cout << "  * stringvalue refCount decreased to " << refCount << " (" << data << ")" << std::endl;
+            std::cout << "  * stringvalue dtor: refCount decreased to " << refCount << " (" << data << ")" << std::endl;
         }
     }
 }
@@ -47,8 +47,8 @@ void StringValue::incrementRefCount() {
 
 // mystring defs
 MyString::MyString() {
-    value = new StringValue();
     std::cout << " * mystring noarg ctor" << std::endl;
+    value = new StringValue();
 }
 
 MyString::MyString(const char* d) {
@@ -62,16 +62,38 @@ MyString::MyString(const MyString& other) {
     value->incrementRefCount();
 }
 
+MyString::MyString(MyString && other) {
+    std::cout << " * mystring move ctor (" << other.value->getData() << ")" << std::endl;
+    value = other.value;
+    other.value = nullptr;
+    other.~MyString();
+}
+
 MyString::~MyString() {
-    std::cout << " * mystring dtor (" << value->getData() << ")" << std::endl;
-    value->~StringValue();
+    if (value != nullptr) {
+        std::cout << " * mystring dtor (" << value->getData() << ")" << std::endl;
+        value->~StringValue();
+    } else {
+        std::cout << " * mystring dtor noop" << std::endl;
+    }
 }
 
 MyString& MyString::operator= (const MyString& rhs) {
-    std::cout << " * mystring op=" << std::endl;
+    std::cout << " * mystring op= (" << *this << " = " << rhs << ")" << std::endl;
     if (this != &rhs) {
+        value->~StringValue();
         value = rhs.value;
         value->incrementRefCount();
+    }
+    return *this;
+}
+
+MyString& MyString::operator= (MyString && rhs) {
+    std::cout << " * mystring move op= (" << *this << " = " << rhs << ")" << std::endl;
+    if (this != &rhs) {
+        value->~StringValue();
+        value = rhs.value;
+        rhs.value = nullptr;
     }
     return *this;
 }

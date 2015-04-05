@@ -38,23 +38,22 @@ public:
 
     MyString& operator= (const MyString&);
     MyString& operator= (MyString &&);
-
     MyString& operator+= (const MyString&);
     MyString operator+ (const MyString&);
-
     MyString& operator+= (const char*);
     MyString operator+ (const char*);
-
     MyString& operator+= (char);
     MyString operator+ (char);
-
     char& operator[] (int);
     const char& operator[] (int) const;
 
     StringValue* getValue();
     int getLength();
     void unlinkStringValue();
-    friend std::ostream& operator << (std::ostream&, const MyString&);
+
+    friend std::ostream& operator<< (std::ostream&, const MyString&);
+    friend std::istream& operator>> (std::istream&, MyString&);
+
 };
 
 #endif // MYSTRING_H

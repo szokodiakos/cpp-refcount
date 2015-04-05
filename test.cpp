@@ -84,6 +84,10 @@ int main(int argc, char** argv) {
     cout << "+=op concat with char" << endl;
     hello5 += 'q';
 
+    cout << "cin/cout test [add text, then push enter]" << endl;
+    cin >> hello5;
+    cout << " * new hello5 is: " << hello5 << endl;
+
     cout << "return" << endl;
     return 0;
 }

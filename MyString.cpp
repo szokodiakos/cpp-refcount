@@ -233,7 +233,14 @@ void MyString::unlinkStringValue() {
     }
 }
 
-std::ostream& operator << (std::ostream& os, const MyString& myString) {
+std::ostream& operator<< (std::ostream& os, const MyString& myString) {
     os << myString.value->getData();
     return os;
+}
+
+std::istream& operator>> (std::istream& is, MyString& myString) {
+    char buffer[256];
+    is >> buffer;
+    myString = MyString(buffer);
+    return is;
 }

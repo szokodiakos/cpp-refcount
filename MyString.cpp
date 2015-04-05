@@ -21,11 +21,11 @@ StringValue::StringValue(const StringValue& other) : refCount {1} {
     std::cout << "  * stringvalue copy ctor (" << data << ")" << std::endl;
 }
 
-StringValue::StringValue(const char* d) : refCount {1} {
-    int size = strlen(d) + 1;
+StringValue::StringValue(const char* string) : refCount {1} {
+    int size = strlen(string) + 1;
     data = new char[size];
     for (int i = 0; i < size; i++) {
-        data[i] = d[i];
+        data[i] = string[i];
     }
     data[size-1] = '\0';
     std::cout << "  * stringvalue const char ctor (" << data << ")" << std::endl;
@@ -49,23 +49,6 @@ StringValue& StringValue::operator= (const StringValue& rhs) {
         refCount = rhs.getRefCount();
     }
     return *this;
-}
-
-StringValue StringValue::operator+ (const StringValue& other) {
-    std::cout << "  * stringvalue + operator (" << data << " + " << other.data << ")" << std::endl;
-    int length = strlen(data);
-    int otherLength = strlen(other.getData());
-    char* concated = new char[length + otherLength + 1];
-    for (int i = 0; i < length; i++) {
-        concated[i] = data[i];
-    }
-    for (int i = 0; i < otherLength; i++) {
-        concated[length + i] = other.data[i];
-    }
-    concated[length + otherLength] = '\0';
-    StringValue ret(concated);
-    delete[] concated;
-    return ret;
 }
 
 char& StringValue::operator[] (int index) {
@@ -95,19 +78,36 @@ void StringValue::decrementRefCount() {
     std::cout << "  * stringvalue refCount decreased to " << refCount << " (" << data << ")" << std::endl;
 }
 
+StringValue operator+ (const StringValue& lhs, const StringValue& rhs) {
+    std::cout << "  * stringvalue + operator (" << lhs.data << " + " << rhs.data << ")" << std::endl;
+    int lhsLength = strlen(lhs.data);
+    int rhsLength = strlen(rhs.data);
+    char* concated = new char[lhsLength + rhsLength + 1];
+    for (int i = 0; i < lhsLength; i++) {
+        concated[i] = lhs.data[i];
+    }
+    for (int i = 0; i < rhsLength; i++) {
+        concated[lhsLength + i] = rhs.data[i];
+    }
+    concated[lhsLength + rhsLength] = '\0';
+    StringValue ret(concated);
+    delete[] concated;
+    return ret;
+}
+
 // mystring defs
 MyString::MyString() {
     std::cout << " * mystring noarg ctor" << std::endl;
     value = new StringValue();
 }
 
-MyString::MyString(const char* d) {
-    std::cout << " * mystring const char ctor (" << d << ")" << std::endl;
-    value = new StringValue(d);
+MyString::MyString(const char* string) {
+    std::cout << " * mystring const char ctor (" << string << ")" << std::endl;
+    value = new StringValue(string);
 }
 
-MyString::MyString(StringValue& sv) {
-    value = new StringValue(sv);
+MyString::MyString(StringValue& stringValue) {
+    value = new StringValue(stringValue);
 }
 
 MyString::MyString(const MyString& other) {
@@ -149,50 +149,22 @@ MyString& MyString::operator= (MyString && rhs) {
     return *this;
 }
 
-MyString& MyString::operator+= (const MyString& other) {
-    std::cout << " * mystring += operator (" << *this << " += " << other << ")" << std::endl;
-    *this = *this + other;
+MyString& MyString::operator+= (const MyString& rhs) {
+    std::cout << " * mystring += operator (" << *this << " += " << rhs << ")" << std::endl;
+    *this = *this + rhs;
     return *this;
 }
 
-MyString MyString::operator+ (const MyString& other) {
-    std::cout << " * mystring + operator (" << *this << " + " << other << ")" << std::endl;
-    StringValue concated((*value) + (*other.value));
-    return MyString(concated);
-}
-
-MyString& MyString::operator+= (const char* c) {
-    std::cout << " * mystring += operator with const char* (" << *this << " + " << c << ")" << std::endl;
-    *this = *this + c;
+MyString& MyString::operator+= (const char* string) {
+    std::cout << " * mystring += operator with const char* (" << *this << " + " << string << ")" << std::endl;
+    *this = *this + string;
     return *this;
 }
 
-MyString MyString::operator+ (const char* c) {
-    std::cout << " * mystring + operator with const char* (" << *this << " + " << c << ")" << std::endl;
-    const char* concated = new char[strlen(value->getData()) + strlen(c) + 1];
-    MyString ret(concated);
-    delete[] concated;
-    return ret;
-}
-
-MyString& MyString::operator+= (char c) {
-    std::cout << " * mystring += operator with char (" << *this << " + " << c << ")" << std::endl;
-    *this = *this + c;
+MyString& MyString::operator+= (char string) {
+    std::cout << " * mystring += operator with char (" << *this << " + " << string << ")" << std::endl;
+    *this = *this + string;
     return *this;
-}
-
-MyString MyString::operator+ (char c) {
-    std::cout << " * mystring + operator with char (" << *this << " + " << c << ")" << std::endl;
-    int length = getLength();
-    char* concated = new char[length + 1 + 1]; // current + 1 char + \0
-    for (int i = 0; i < length; i++) {
-        concated[i] = (*value)[i];
-    }
-    concated[length] = c;
-    concated[length + 1] = '\0';
-    MyString ret(concated);
-    delete[] concated;
-    return ret;
 }
 
 const char& MyString::operator[] (int index) const {
@@ -222,7 +194,7 @@ StringValue* MyString::getValue() {
     return value;
 }
 
-int MyString::getLength() {
+int MyString::getLength() const {
     return strlen(value->getData());
 }
 
@@ -231,6 +203,34 @@ void MyString::unlinkStringValue() {
     if (value->getRefCount() == 0) {
         delete value;
     }
+}
+
+MyString operator+ (const MyString& lhs, const MyString& rhs) {
+    std::cout << " * mystring + operator (" << lhs << " + " << rhs << ")" << std::endl;
+    StringValue concated((*lhs.value) + (*rhs.value));
+    return MyString(concated);
+}
+
+MyString operator+ (const MyString& myString, const char* string) {
+    std::cout << " * mystring + operator with const char* (" << myString << " + " << string << ")" << std::endl;
+    const char* concated = new char[strlen(myString.value->getData()) + strlen(string) + 1];
+    MyString ret(concated);
+    delete[] concated;
+    return ret;
+}
+
+MyString operator+ (const MyString& myString, char c) {
+    std::cout << " * mystring + operator with char (" << myString << " + " << c << ")" << std::endl;
+    int length = myString.getLength();
+    char* concated = new char[length + 1 + 1]; // current + 1 char + \0
+    for (int i = 0; i < length; i++) {
+        concated[i] = myString[i];
+    }
+    concated[length] = c;
+    concated[length + 1] = '\0';
+    MyString ret(concated);
+    delete[] concated;
+    return ret;
 }
 
 std::ostream& operator<< (std::ostream& os, const MyString& myString) {

@@ -5,10 +5,20 @@
 
 // stringvalue defs
 StringValue::StringValue() : refCount {1} {
-    int size = 1;
-    data = new char[size];
-    data[size-1] = '\0';
+    int size = 0;
+    data = new char[size + 1];
+    data[size] = '\0';
     std::cout << "  * stringvalue noarg ctor (" << data << ")" << std::endl;
+}
+
+StringValue::StringValue(const StringValue& other) : refCount {1} {
+    int size = strlen(other.getData());
+    data = new char[size + 1];
+    for (int i = 0; i < size; i++) {
+        data[i] = other.data[i];
+    }
+    data[size] = '\0';
+    std::cout << "  * stringvalue copy ctor (" << data << ")" << std::endl;
 }
 
 StringValue::StringValue(const char* d) : refCount {1} {
@@ -22,40 +32,48 @@ StringValue::StringValue(const char* d) : refCount {1} {
 }
 
 StringValue::~StringValue() {
-    if (refCount != -1) {
-        --refCount;
-        if (refCount == 0) {
-            std::cout << "  * stringvalue dtor (" << data << ")" << std::endl;
-            delete[] data;
-        } else {
-            std::cout << "  * stringvalue dtor: refCount decreased to " << refCount << " (" << data << ")" << std::endl;
+    std::cout << "  * stringvalue dtor" << std::endl;
+    delete[] data;
+}
+
+StringValue& StringValue::operator= (const StringValue& rhs) {
+    std::cout << " * stringvalue op= (" << data << " = " << rhs.data << ")" << std::endl;
+    if (this != &rhs) {
+        delete[] data;
+        int rhsLength = strlen(rhs.getData());
+        data = new char[rhsLength + 1];
+        for (int i = 0; i < rhsLength; i++) {
+            data[i] = rhs.getData()[i];
         }
+        data[rhsLength] = '\0';
+        refCount = rhs.getRefCount();
     }
+    return *this;
 }
 
 StringValue StringValue::operator+ (const StringValue& other) {
     std::cout << "  * stringvalue + operator (" << data << " + " << other.data << ")" << std::endl;
     int length = strlen(data);
     int otherLength = strlen(other.getData());
-    char* concated = new char[length + otherLength + 1]; // drop first string's trailing '\0'
+    char* concated = new char[length + otherLength + 1];
     for (int i = 0; i < length; i++) {
         concated[i] = data[i];
     }
-
-    // start from size - 1 to omit trailing '\0'
     for (int i = 0; i < otherLength; i++) {
         concated[length + i] = other.data[i];
     }
+    concated[length + otherLength] = '\0';
     StringValue ret(concated);
     delete[] concated;
     return ret;
 }
 
 char& StringValue::operator[] (int index) {
-    std::cout << "  * stringvalue [] operator" << std::endl;
-    if (index < 0 || index >= static_cast<int>(strlen(data))) {
+    int length = static_cast<int>(strlen(data));
+    if (index < 0 || index >= length) {
         throw std::out_of_range("index out of range");
     }
+    std::cout << "  * stringvalue [" << index << "] operator: " << data[index] << std::endl;
     return data[index];
 }
 
@@ -72,6 +90,11 @@ void StringValue::incrementRefCount() {
     std::cout << "  * stringvalue refCount increased to " << refCount << " (" << data << ")" << std::endl;
 }
 
+void StringValue::decrementRefCount() {
+    --refCount;
+    std::cout << "  * stringvalue refCount decreased to " << refCount << " (" << data << ")" << std::endl;
+}
+
 // mystring defs
 MyString::MyString() {
     std::cout << " * mystring noarg ctor" << std::endl;
@@ -83,7 +106,7 @@ MyString::MyString(const char* d) {
     value = new StringValue(d);
 }
 
-MyString::MyString(StringValue sv) {
+MyString::MyString(StringValue& sv) {
     value = new StringValue(sv);
 }
 
@@ -97,22 +120,19 @@ MyString::MyString(MyString && other) {
     std::cout << " * mystring move ctor (" << other.value->getData() << ")" << std::endl;
     value = other.value;
     other.value = nullptr;
-    other.~MyString();
 }
 
 MyString::~MyString() {
+    std::cout << " * mystring dtor" << std::endl;
     if (value != nullptr) {
-        std::cout << " * mystring dtor (" << value->getData() << ")" << std::endl;
-        value->~StringValue();
-    } else {
-        std::cout << " * mystring dtor noop" << std::endl;
+        unlinkStringValue();
     }
 }
 
 MyString& MyString::operator= (const MyString& rhs) {
     std::cout << " * mystring op= (" << *this << " = " << rhs << ")" << std::endl;
     if (this != &rhs) {
-        value->~StringValue();
+        unlinkStringValue();
         value = rhs.value;
         value->incrementRefCount();
     }
@@ -122,7 +142,7 @@ MyString& MyString::operator= (const MyString& rhs) {
 MyString& MyString::operator= (MyString && rhs) {
     std::cout << " * mystring move op= (" << *this << " = " << rhs << ")" << std::endl;
     if (this != &rhs) {
-        value->~StringValue();
+        unlinkStringValue();
         value = rhs.value;
         rhs.value = nullptr;
     }
@@ -137,7 +157,8 @@ MyString& MyString::operator+= (const MyString& other) {
 
 MyString MyString::operator+ (const MyString& other) {
     std::cout << " * mystring + operator (" << *this << " + " << other << ")" << std::endl;
-    return MyString(*(value) + *(other.value));
+    StringValue concated((*value) + (*other.value));
+    return MyString(concated);
 }
 
 MyString& MyString::operator+= (const char* c) {
@@ -184,13 +205,14 @@ const char& MyString::operator[] (int index) const {
 
 char& MyString::operator[] (int index) {
     std::cout << " * mystring [] operator" << std::endl;
-    if (index < 0 || index >= static_cast<int>(strlen(value->getData()))) {
+    int length = static_cast<int>(strlen(value->getData()));
+    if (index < 0 || index >= length) {
         throw std::out_of_range("index out of range");
     }
 
     // there will be other MyStrings who refer to this StringValue - no leak
     if (value->getRefCount() > 1) {
-        value->~StringValue();
+        unlinkStringValue();
         value = new StringValue(value->getData());
     }
     return (*value)[index];
@@ -202,6 +224,13 @@ StringValue* MyString::getValue() {
 
 int MyString::getLength() {
     return strlen(value->getData());
+}
+
+void MyString::unlinkStringValue() {
+    value->decrementRefCount();
+    if (value->getRefCount() == 0) {
+        delete value;
+    }
 }
 
 std::ostream& operator << (std::ostream& os, const MyString& myString) {

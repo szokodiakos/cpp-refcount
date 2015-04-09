@@ -54,7 +54,7 @@ public:
      * @param rhs The StringValue to be assigned.
      * @return The modified StringValue.
      */
-    StringValue& operator= (const StringValue& rhs);
+    StringValue& operator= (StringValue rhs);
 
     /**
      * @brief Indexing operator to read/modify individual chars from data.
@@ -152,14 +152,7 @@ public:
      * @param rhs The MyString to be assigned.
      * @return The modified MyString.
      */
-    MyString& operator= (const MyString& rhs);
-
-    /**
-     * @brief Move assignment operator.
-     * @param rhs The MyString to be moved.
-     * @return The modified MyString.
-     */
-    MyString& operator= (MyString && rhs);
+    MyString& operator= (MyString rhs);
 
     /**
      * @brief Concatenates the object's StringValue with a MyString's StringValue on the right hand side.

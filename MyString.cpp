@@ -36,18 +36,10 @@ StringValue::~StringValue() {
     delete[] data;
 }
 
-StringValue& StringValue::operator= (const StringValue& rhs) {
+StringValue& StringValue::operator= (StringValue rhs) {
     std::cout << " * stringvalue op= (" << data << " = " << rhs.data << ")" << std::endl;
-    if (this != &rhs) {
-        delete[] data;
-        int rhsLength = strlen(rhs.getData());
-        data = new char[rhsLength + 1];
-        for (int i = 0; i < rhsLength; i++) {
-            data[i] = rhs.getData()[i];
-        }
-        data[rhsLength] = '\0';
-        refCount = rhs.getRefCount();
-    }
+    std::swap(refCount, rhs.refCount);
+    std::swap(data, rhs.data);
     return *this;
 }
 
@@ -129,23 +121,9 @@ MyString::~MyString() {
     }
 }
 
-MyString& MyString::operator= (const MyString& rhs) {
+MyString& MyString::operator= (MyString rhs) {
     std::cout << " * mystring op= (" << *this << " = " << rhs << ")" << std::endl;
-    if (this != &rhs) {
-        unlinkStringValue();
-        value = rhs.value;
-        value->incrementRefCount();
-    }
-    return *this;
-}
-
-MyString& MyString::operator= (MyString && rhs) {
-    std::cout << " * mystring move op= (" << *this << " = " << rhs << ")" << std::endl;
-    if (this != &rhs) {
-        unlinkStringValue();
-        value = rhs.value;
-        rhs.value = nullptr;
-    }
+    std::swap(value, rhs.value);
     return *this;
 }
 

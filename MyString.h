@@ -39,6 +39,12 @@ public:
     StringValue(const StringValue& other);
 
     /**
+    * @brief Move constructor.
+    * @param other The StringValue to be moved.
+    */
+    StringValue(StringValue && other);
+
+    /**
      * @brief Creates StringValue from const char* with 1 reference count.
      * @param string Adds trailing '\0' to the string.
      */

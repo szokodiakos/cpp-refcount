@@ -21,6 +21,12 @@ StringValue::StringValue(const StringValue& other) : refCount {1} {
     std::cout << "  * stringvalue copy ctor (" << data << ")" << std::endl;
 }
 
+StringValue::StringValue(StringValue && other) : refCount {1} {
+    std::cout << " * stringvalue move ctor (" << other.data << ")" << std::endl;
+    data = other.data;
+    other.data = nullptr;
+}
+
 StringValue::StringValue(const char* string) : refCount {1} {
     int size = strlen(string) + 1;
     data = new char[size];

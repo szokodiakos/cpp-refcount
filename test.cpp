@@ -3,19 +3,24 @@
 #include "MyString.h"
 
 int reserved = 0;
+int silentAllocation = true;
 
 void * operator new(size_t size) {
     if(size > 1024*1024) throw std::bad_alloc();
     void *res = malloc(size);
     if(res == nullptr) throw std::bad_alloc();
-    std::cout << "~~~ allocated " << size << " bytes at " << res << std::endl;
+    if (!silentAllocation) {
+        std::cout << "~~~ allocated " << size << " bytes at " << res << std::endl;
+    }
     reserved ++;
     return res;
 }
 
 void operator delete(void *p) noexcept {
     free(p);
-    std::cout << "~~~ freed memory at " << p << std::endl;
+    if (!silentAllocation) {
+        std::cout << "~~~ freed memory at " << p << std::endl;
+    }
     reserved--;
 }
 
@@ -23,19 +28,25 @@ void * operator new[](size_t size) {
     if(size > 1024*1024) throw std::bad_alloc();
     void *res = malloc(size);
     if(res == nullptr) throw std::bad_alloc();
-    std::cout << "~~~ allocated " << size << " bytes at " << res << std::endl;
+    if (!silentAllocation) {
+        std::cout << "~~~ allocated " << size << " bytes at " << res << std::endl;
+    }
     reserved ++;
     return res;
 }
 
 void operator delete[](void *p) noexcept {
     free(p);
-    std::cout << "~~~ freed memory at " << p << std::endl;
+    if (!silentAllocation) {
+        std::cout << "~~~ freed memory at " << p << std::endl;
+    }
     reserved--;
 }
 
 void check() {
-    std::cout << "~~~ Reserved: " << reserved << std::endl;
+    if (!silentAllocation) {
+        std::cout << "~~~ Reserved: " << reserved << std::endl;
+    }
 }
 
 using namespace std;
